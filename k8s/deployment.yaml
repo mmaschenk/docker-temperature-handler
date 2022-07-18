@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nagios-retriever
+  name: nagios-retriever
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nagios-retriever
+  template:
+    metadata:
+      labels:
+        app: nagios-retriever
+    spec:
+      containers:
+      - name: nagios-retriever
+        image: mmaschenk/nagios-retriever:1.4.1
+        envFrom:
+        - secretRef:
+            name: passwords
+        - configMapRef:
+            name: environment

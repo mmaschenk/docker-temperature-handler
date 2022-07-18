@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment
+data:
+  MQRABBIT_USER: nagios
+  MQRABBIT_HOST: "hostname for mqrabbit server"
+  MQRABBIT_VHOST: "virtual host for mqrabbit. Defaults to /"
+  MQRABBIT_PORT: "Port on which to contact mqrabbit"
+  MQRABBIT_EXCHANGE: "Name of the mqrabbit exchange to which to post"
+  MQTT_USER: "Name of the mqtt user that will read temperature entries"
+  MQTT_HOST: "hostname for MQTT server
+  MQTT_PORT: "Port for MQTT server"
