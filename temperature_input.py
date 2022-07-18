@@ -28,35 +28,46 @@ mqtt_queue = os.getenv("MQTT_QUEUE")
 
 everythingfine = True
 
+def handleSenML(message):
+    """
+    Forward the message to next queue. Check each line with a measurement and add time to that
+    """
+    outmessage = []
+    for line in message:
+        if 't' in line and line['t'] == 0:
+            line['t'] = int(time.time())
+
+    print(f"[W] Forwarding: {message}")
+    channel.basic_publish(exchange=mqrabbit_exchange, routing_key='*', 
+                                        body=json.dumps(message))
+
 def on_message(client, userdata, message):
     payload=str(message.payload.decode("utf-8"))
-    print(f"receiving {datetime.datetime.now()}")
-    print("message received " , payload)
-    print("message topic=",message.topic)
-    print("message qos=",message.qos)
-    print("message retain flag=",message.retain)
+    print(f"[W] receiving {datetime.datetime.now()} =====================")
+    print(f"[W] topic={message.topic} qos={message.qos} retain-flag={message.retain}")
+    print(f"[W] payload: {payload}")
 
     try:
         reading = json.loads(payload)
-
-        message = { 'type': 'temperature', 'value': f"{reading['temp_celsius']:.1f}" }
-        channel.basic_publish(exchange='', routing_key='nagios_queue', 
-                                    body=json.dumps(message))
-        print(f"Published temperature: {reading['temp_celsius']:.1f}")
+        if isinstance(reading, list):
+            handleSenML(reading)
+        else:
+            print("[W] ignoring unrecognized message")
     except json.JSONDecodeError:
-        print("Could not decode payload")
+        print("[W] ignoring: could not decode payload")
     except pika.exceptions.StreamLostError:
+        print("[W] connection lost. Need restarting")
         everythingfine = False
 
 def on_connect(client, userdata, flags, rc):
     if rc==0:
-        print("connected OK Returned code=",rc)
+        print("[R] connected OK Returned code=",rc)
     else:
-        print("Bad connection Returned code=",rc)
+        print("[R] Bad connection Returned code=",rc)
 
 while True:
 
-    print("Connecting")
+    print("[R] Connecting")
     mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
     mqparameters = pika.ConnectionParameters(
         host=mqrabbit_host,
@@ -67,7 +78,7 @@ while True:
     mqconnection = pika.BlockingConnection(mqparameters)
     channel = mqconnection.channel()
 
-    channel.exchange_declare(exchange='temperatures', exchange_type='fanout', durable=True)
+    channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
 
     everythingfine = True
 
@@ -78,10 +89,10 @@ while True:
     client.connect(mqtt_host, port=int(mqtt_port))
 
     client.loop_start()
-    print(f"Subscribing to {mqtt_queue}")
+    print(f"[R] Subscribing to {mqtt_queue}")
     client.subscribe(mqtt_queue)
     while True:
         time.sleep(60)
         if not everythingfine:
-            print("Re-initializing")
+            print("[R] Re-initializing")
             break
