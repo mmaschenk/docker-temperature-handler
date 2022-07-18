@@ -7,6 +7,11 @@ import time
 import datetime
 import os
 
+"""
+This script reads the MQTT queue and transforms the message to an RFC8428-compliant message
+that will be placed on the output EXCHANGE.
+"""
+
 mqrabbit_user = os.getenv("MQRABBIT_USER")
 mqrabbit_password = os.getenv("MQRABBIT_PASSWORD")
 mqrabbit_host = os.getenv("MQRABBIT_HOST")
@@ -61,6 +66,8 @@ while True:
 
     mqconnection = pika.BlockingConnection(mqparameters)
     channel = mqconnection.channel()
+
+    channel.exchange_declare(exchange='temperatures', exchange_type='fanout', durable=True)
 
     everythingfine = True
 
