@@ -2,25 +2,54 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: nagios-retriever
-  name: nagios-retriever
+    app: temperature-handler
+  name: temperature-handler
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: nagios-retriever
+      app: temperature-handler
   template:
     metadata:
       labels:
-        app: nagios-retriever
+        app: temperature-handler
     spec:
       containers:
-      - name: nagios-retriever
-        image: mmaschenk/nagios-retriever:1.4.1
+      - name: temperature-handler
+        image: ghcr.io/mmaschenk/docker-temperature-handler:main
         envFrom:
         - secretRef:
             name: passwords
         - configMapRef:
             name: environment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: temperature-rgbmatrix-runner
+  name: temperature-rgbmatrix-runner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: temperature-rgbmatrix-runner
+  template:
+    metadata:
+      labels:
+        app: temperature-rgbmatrix-runner
+    spec:
+      containers:
+      - name: temperature-rgbmatrix-runner
+        image: ghcr.io/mmaschenk/docker-temperature-handler:main
+        envFrom:
+        - secretRef:
+            name: passwords
+        - configMapRef:
+            name: environment
+        command: [ "python" ]
+        args: [ "-u", "/temperature_rgbmatrix.py"]
