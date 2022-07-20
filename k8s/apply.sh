@@ -1,4 +1,4 @@
-export NS=queuehub # Replace with your namespace
+export NS=temperaturehub # Replace with your namespace
 
 if [ "${NS}" == "" ]; then
   echo "Set the NS environment variable to your desired namespace"
