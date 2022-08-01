@@ -58,6 +58,9 @@ def on_message(client, userdata, message):
     except pika.exceptions.StreamLostError:
         print("[W] connection lost. Need restarting")
         everythingfine = False
+    except pika.exceptions.ChannelWrongStateError:
+        print("[W] channel wron state. Need restarting")
+        everythingfine = False
 
 def on_connect(client, userdata, flags, rc):
     if rc==0:
