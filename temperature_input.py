@@ -94,8 +94,11 @@ while True:
     client.loop_start()
     print(f"[R] Subscribing to {mqtt_queue}")
     client.subscribe(mqtt_queue)
+    print("[R] Subscribed")
     while True:
         time.sleep(60)
         if not everythingfine:
             print("[R] Re-initializing")
             break
+        else:
+            print("[R] everything is fine")
