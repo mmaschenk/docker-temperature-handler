@@ -42,6 +42,8 @@ def handleSenML(message):
                                         body=json.dumps(message))
 
 def on_message(client, userdata, message):
+    global everythingfine
+
     payload=str(message.payload.decode("utf-8"))
     print(f"[W] receiving {datetime.datetime.now()} =====================")
     print(f"[W] topic={message.topic} qos={message.qos} retain-flag={message.retain}")
@@ -67,6 +69,13 @@ def on_connect(client, userdata, flags, rc):
         print("[R] connected OK Returned code=",rc)
     else:
         print("[R] Bad connection Returned code=",rc)
+
+def on_disconnect(client, userdata, rc=0):
+    global everythingfine
+    client.loop_stop()
+    everythingfine = False
+
+
 
 while True:
 
@@ -102,3 +111,6 @@ while True:
             break
         else:
             print("[R] everything is fine")
+
+    print("[R] Ending main loop")
+    client.loop_stop()
