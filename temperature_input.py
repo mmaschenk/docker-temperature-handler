@@ -47,9 +47,13 @@ def on_message(client, userdata, message):
     payload=str(message.payload.decode("utf-8"))
     print(f"[W] receiving {datetime.datetime.now()} =====================")
     print(f"[W] topic={message.topic} qos={message.qos} retain-flag={message.retain}")
-    print(f"[W] payload: {payload}")
+    print(f"[W] payload: [{payload}] ({type(payload)}")
 
     try:
+        if payload == "debug: restart":
+            print("[W] Debug command found. Restarting")
+            everythingfine = False
+            
         reading = json.loads(payload)
         if isinstance(reading, list):
             handleSenML(reading)
@@ -66,7 +70,7 @@ def on_message(client, userdata, message):
 
 def on_connect(client, userdata, flags, rc):
     if rc==0:
-        print("[R] connected OK Returned code=",rc)
+        print(f"[R] connected OK Returned code=[{rc}], flags=[{flags}]")
     else:
         print("[R] Bad connection Returned code=",rc)
 
@@ -76,41 +80,38 @@ def on_disconnect(client, userdata, rc=0):
     everythingfine = False
 
 
+print("[R] Connecting")
+mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
+mqparameters = pika.ConnectionParameters(
+    host=mqrabbit_host,
+    virtual_host=mqrabbit_vhost,
+    port=mqrabbit_port,
+    credentials=mqrabbit_credentials)
 
+mqconnection = pika.BlockingConnection(mqparameters)
+channel = mqconnection.channel()
+
+channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
+
+everythingfine = True
+
+client = mqtt.Client('temperature filter')
+client.on_message=on_message
+client.on_connect=on_connect
+client.username_pw_set(mqtt_user, mqtt_password)
+client.connect(mqtt_host, port=int(mqtt_port))
+
+client.loop_start()
+print(f"[R] Subscribing to {mqtt_queue}")
+client.subscribe(mqtt_queue)
+print("[R] Subscribed")
 while True:
+    time.sleep(60)
+    if not everythingfine:
+        print("[R] Re-initializing")
+        break
+    else:
+        print("[R] everything is fine")
 
-    print("[R] Connecting")
-    mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
-    mqparameters = pika.ConnectionParameters(
-        host=mqrabbit_host,
-        virtual_host=mqrabbit_vhost,
-        port=mqrabbit_port,
-        credentials=mqrabbit_credentials)
-
-    mqconnection = pika.BlockingConnection(mqparameters)
-    channel = mqconnection.channel()
-
-    channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
-
-    everythingfine = True
-
-    client = mqtt.Client('temperature filter')
-    client.on_message=on_message
-    client.on_connect=on_connect
-    client.username_pw_set(mqtt_user, mqtt_password)
-    client.connect(mqtt_host, port=int(mqtt_port))
-
-    client.loop_start()
-    print(f"[R] Subscribing to {mqtt_queue}")
-    client.subscribe(mqtt_queue)
-    print("[R] Subscribed")
-    while True:
-        time.sleep(60)
-        if not everythingfine:
-            print("[R] Re-initializing")
-            break
-        else:
-            print("[R] everything is fine")
-
-    print("[R] Ending main loop")
-    client.loop_stop()
+print("[R] Ending main loop")
+client.loop_stop()
