@@ -1,13 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app: temperature-handler
   name: temperature-handler
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
+  serviceName: temperature-handler
   selector:
     matchLabels:
       app: temperature-handler
