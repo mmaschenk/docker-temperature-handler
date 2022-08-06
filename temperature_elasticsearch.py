@@ -50,6 +50,14 @@ def handleSenML(body):
             #channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
             print(f"[W] Storing: {line}")
             es.index(index='temperatures', document=line)
+        if 'n' in line and line['n'] == "battery":
+            fullname = basename + line['n']
+            print(f"[W] Storing battery value for device {fullname} ({line['v']:.1f})")
+            line['n'] = fullname
+            #message = { 'bn': fullname, 'v': line['v'] }
+            #channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
+            print(f"[W] Storing: {line}")
+            es.index(index='batteries', document=line)
 
 def callback(ch, method, properties, body):
     print(f"[W] Handling: {body}")
@@ -73,8 +81,13 @@ index = es.indices.create(
     mappings=mapping
     )
 
-#es.indices.put_mapping(mapping, 'temperatures')
+index = es.indices.create(
+    ignore=400,
+    index='batteries',
+    mappings=mapping
+    )
 
+#es.indices.put_mapping(mapping, 'temperatures')
 
 print("[R] Connecting")
 mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
