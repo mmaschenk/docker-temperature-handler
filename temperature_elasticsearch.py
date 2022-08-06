@@ -52,7 +52,7 @@ def handleSenML(body):
             es.index(index='temperatures', document=line)
         if 'n' in line and line['n'] == "battery":
             fullname = basename + line['n']
-            print(f"[W] Storing battery value for device {fullname} ({line['v']:.1f})")
+            print(f"[W] Storing battery value for device {fullname} ({line['v']:.2f})")
             line['n'] = fullname
             #message = { 'bn': fullname, 'v': line['v'] }
             #channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
