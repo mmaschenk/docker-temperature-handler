@@ -57,8 +57,6 @@ def handleSenML(message):
                 body=json.dumps(message))
         )
 
-    mqconnection.add_callback_threadsafe
-
 def on_message(client, userdata, message):
     global everythingfine
 
@@ -100,8 +98,6 @@ def on_disconnect(client, userdata, rc=0):
     global everythingfine
     client.loop_stop()
     everythingfine = False
-
-
 
 channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
 
