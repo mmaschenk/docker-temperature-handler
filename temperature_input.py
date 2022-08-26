@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import functools
 import pika
 import json
 import paho.mqtt.client as mqtt
@@ -28,6 +29,17 @@ mqtt_queue = os.getenv("MQTT_QUEUE")
 
 everythingfine = True
 
+print("[R] Connecting")
+mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
+mqparameters = pika.ConnectionParameters(
+    host=mqrabbit_host,
+    virtual_host=mqrabbit_vhost,
+    port=mqrabbit_port,
+    credentials=mqrabbit_credentials)
+
+mqconnection = pika.BlockingConnection(mqparameters)
+channel = mqconnection.channel()
+
 def handleSenML(message):
     """
     Forward the message to next queue. Check each line with a measurement and add time to that
@@ -38,8 +50,14 @@ def handleSenML(message):
             line['t'] = int(time.time())
 
     print(f"[W] Forwarding: {message}")
-    channel.basic_publish(exchange=mqrabbit_exchange, routing_key='*', 
-                                        body=json.dumps(message))
+    mqconnection.add_callback_threadsafe(
+        functools.partial( 
+            channel.basic_publish,
+                exchange=mqrabbit_exchange, routing_key='*', 
+                body=json.dumps(message))
+        )
+
+    mqconnection.add_callback_threadsafe
 
 def on_message(client, userdata, message):
     global everythingfine
@@ -84,16 +102,6 @@ def on_disconnect(client, userdata, rc=0):
     everythingfine = False
 
 
-print("[R] Connecting")
-mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
-mqparameters = pika.ConnectionParameters(
-    host=mqrabbit_host,
-    virtual_host=mqrabbit_vhost,
-    port=mqrabbit_port,
-    credentials=mqrabbit_credentials)
-
-mqconnection = pika.BlockingConnection(mqparameters)
-channel = mqconnection.channel()
 
 channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
 
