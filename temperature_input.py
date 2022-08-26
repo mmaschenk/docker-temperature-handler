@@ -53,7 +53,7 @@ def on_message(client, userdata, message):
         if payload == "debug: restart":
             print("[W] Debug command found. Restarting")
             everythingfine = False
-            
+
         reading = json.loads(payload)
         if isinstance(reading, list):
             handleSenML(reading)
@@ -63,9 +63,13 @@ def on_message(client, userdata, message):
         print("[W] ignoring: could not decode payload")
     except pika.exceptions.StreamLostError:
         print("[W] connection lost. Need restarting")
+        print(f"[W] [channel] closed={channel.is_closed} open={channel.is_open}")
+        print(f"[W] [connection] closed={mqconnection.is_closed} open={mqconnection.is_open}")
         everythingfine = False
     except pika.exceptions.ChannelWrongStateError:
         print("[W] channel wrong state. Need restarting")
+        print(f"[W] [channel] closed={channel.is_closed} open={channel.is_open}")
+        print(f"[W] [connection] closed={mqconnection.is_closed} open={mqconnection.is_open}")
         everythingfine = False
 
 def on_connect(client, userdata, flags, rc):
@@ -106,7 +110,7 @@ print(f"[R] Subscribing to {mqtt_queue}")
 client.subscribe(mqtt_queue)
 print("[R] Subscribed")
 while True:
-    time.sleep(60)
+    mqconnection.sleep(60)
     if not everythingfine:
         print("[R] Re-initializing")
         break
