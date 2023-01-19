@@ -20,7 +20,8 @@ mqrabbit_port = os.getenv("MQRABBIT_PORT")
 mqrabbit_exchange = os.getenv("MQRABBIT_EXCHANGE")
 mqrabbit_rgbmatrix_destination = os.getenv("MQRABBIT_RGBMATRIX_DESTINATION")
 
-temperature_rgbmatrix_namefilter = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER")
+temperature_rgbmatrix_topnamefilter = os.getenv("TEMPERATURE_RGBMATRIX_TOPNAMEFILTER")
+temperature_rgbmatrix_bottomnamefilter = os.getenv("TEMPERATURE_RGBMATRIX_BOTTOMNAMEFILTER")
 
 everythingfine = True
 
@@ -36,9 +37,13 @@ def handleSenML(body):
             basename = line['bn']
         if 'n' in line:
             fullname = basename + line['n']
-        if fullname == temperature_rgbmatrix_namefilter:
-            print(f"[W] Sending temperature value for device {fullname} ({line['v']:.1f})")
-            message = { 'type': 'temperature', 'value': f"{line['v']:.1f}" }
+        if fullname == temperature_rgbmatrix_topnamefilter:
+            print(f"[W] Sending top temperature value for device {fullname} ({line['v']:.1f})")
+            message = { 'type': 'toptemperature', 'value': f"{line['v']:.1f}" }
+            channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
+        if fullname == temperature_rgbmatrix_bottomnamefilter:
+            print(f"[W] Sending bottom temperature value for device {fullname} ({line['v']:.1f})")
+            message = { 'type': 'bottomtemperature', 'value': f"{line['v']:.1f}" }
             channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
 
 def callback(ch, method, properties, body):
