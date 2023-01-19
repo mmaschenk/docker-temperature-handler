@@ -35,14 +35,22 @@ def handleSenML(body):
         return
 
     basename = ""
+    baset = 0
     for line in body:
         fullname = ''
         if 'bn' in line:
             basename = line['bn']
             del line['bn']
+        if 'bt' in line:
+            baset = line['bt']
+            del line['bt']
+        if 't' in line:
+            line['t'] = baset + line['t']
+        else:
+            line['t'] = baset
         if 'n' in line:
             print("[W] Found n: ", line['n'])
-        if 'n' in line: 
+        if 'n' in line and 'v' in line:
             fullname = basename + line['n']        
             print(f"[W] Storing value with name {line['n']} for device {fullname} ({line['v']:.1f})")
             line['n'] = fullname

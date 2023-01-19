@@ -4,7 +4,8 @@ import functools
 import pika
 import json
 import paho.mqtt.client as mqtt
-import time
+import pytz
+from dateutil import parser
 import datetime
 import os
 import numbers
@@ -46,7 +47,8 @@ def handleRTL433(message):
     Create a RFC8428-compliant message and forward this to next queue. 
     """
 
-    timevalue = datetime.datetime.timestamp(datetime.datetime.strptime(message['time'], '%Y-%m-%d %H:%M:%S'))
+    dateobject = parser.parse(message['time'])
+    timevalue = datetime.datetime.timestamp(dateobject)
 
     print(f"Found timevalue = [{timevalue}]")
 
@@ -119,6 +121,8 @@ def on_message(client, userdata, message):
         print(f"[W] [channel] closed={channel.is_closed} open={channel.is_open}")
         print(f"[W] [connection] closed={mqconnection.is_closed} open={mqconnection.is_open}")
         everythingfine = False
+    except Exception as e:
+        print(f"[W] Maybe not fine: {e}")
 
 def on_connect(client, userdata, flags, rc):
     if rc==0:
@@ -135,7 +139,7 @@ channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', dur
 
 everythingfine = True
 
-client = mqtt.Client('temperature filter')
+client = mqtt.Client('temperature rtl433 filter')
 client.on_message=on_message
 client.on_connect=on_connect
 client.username_pw_set(mqtt_user, mqtt_password)

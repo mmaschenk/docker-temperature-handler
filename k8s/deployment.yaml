@@ -23,6 +23,10 @@ spec:
             name: passwords
         - configMapRef:
             name: environment
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -50,6 +54,10 @@ spec:
             name: passwords
         - configMapRef:
             name: environment
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
         command: [ "python" ]
         args: [ "-u", "/temperature_rgbmatrix.py"]
 ---
@@ -79,5 +87,74 @@ spec:
             name: passwords
         - configMapRef:
             name: environment
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
         command: [ "python" ]
         args: [ "-u", "/temperature_elasticsearch.py"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: raw-elasticsearch-runner
+  name: raw-elasticsearch-runner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: raw-elasticsearch-runner
+  template:
+    metadata:
+      labels:
+        app: raw-elasticsearch-runner
+    spec:
+      containers:
+      - name: raw-elasticsearch-runner
+        image: ghcr.io/mmaschenk/docker-temperature-handler:main
+        envFrom:
+        - secretRef:
+            name: passwords
+        - configMapRef:
+            name: environment
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        command: [ "python" ]
+        args: [ "-u", "/raw_elasticsearch.py"]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: rtl433-temperature-input
+  name: rtl433-temperature-input
+spec:
+  replicas: 1
+  serviceName: rtl433-temperature-input
+  selector:
+    matchLabels:
+      app: rtl433-temperature-input
+  template:
+    metadata:
+      labels:
+        app: rtl433-temperature-input
+    spec:
+      containers:
+      - name: rtl433-temperature-input
+        image: ghcr.io/mmaschenk/docker-temperature-handler:main
+        envFrom:
+        - secretRef:
+            name: passwords
+        - configMapRef:
+            name: environment
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        command: [ "python" ]
+        args: [ "-u", "/temperature_input_rtl433.py"]
