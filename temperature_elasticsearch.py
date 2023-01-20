@@ -9,8 +9,7 @@ import os
 from elasticsearch import Elasticsearch
 
 """
-This script reads the MQTT queue and transforms the message to an RFC8428-compliant message
-that will be placed on the output EXCHANGE.
+This script reads the MQTT queue and puts temperature and battery readings in the corresponding elasticsearch index.
 """
 
 mqrabbit_user = os.getenv("MQRABBIT_USER")
