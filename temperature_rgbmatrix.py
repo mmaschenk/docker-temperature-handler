@@ -20,8 +20,9 @@ mqrabbit_port = os.getenv("MQRABBIT_PORT")
 mqrabbit_exchange = os.getenv("MQRABBIT_EXCHANGE")
 mqrabbit_rgbmatrix_destination = os.getenv("MQRABBIT_RGBMATRIX_DESTINATION")
 
-temperature_rgbmatrix_topnamefilter = os.getenv("TEMPERATURE_RGBMATRIX_TOPNAMEFILTER")
-temperature_rgbmatrix_bottomnamefilter = os.getenv("TEMPERATURE_RGBMATRIX_BOTTOMNAMEFILTER")
+temperature_rgbmatrix_namefilter1 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER1")
+temperature_rgbmatrix_namefilter2 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER2")
+temperature_rgbmatrix_namefilter3 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER3")
 
 everythingfine = True
 
@@ -37,13 +38,17 @@ def handleSenML(body):
             basename = line['bn']
         if 'n' in line:
             fullname = basename + line['n']
-        if fullname == temperature_rgbmatrix_topnamefilter:
-            print(f"[W] Sending top temperature value for device {fullname} ({line['v']:.1f})")
-            message = { 'type': 'toptemperature', 'value': f"{line['v']:.1f}" }
+        if fullname == temperature_rgbmatrix_namefilter1:
+            print(f"[W] Sending temperature1 value for device {fullname} ({line['v']:.1f})")
+            message = { 'type': 'temperature1', 'value': f"{line['v']:.1f}" }
             channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
-        if fullname == temperature_rgbmatrix_bottomnamefilter:
-            print(f"[W] Sending bottom temperature value for device {fullname} ({line['v']:.1f})")
-            message = { 'type': 'bottomtemperature', 'value': f"{line['v']:.1f}" }
+        if fullname == temperature_rgbmatrix_namefilter2:
+            print(f"[W] Sending temperature2 value for device {fullname} ({line['v']:.1f})")
+            message = { 'type': 'temperature2', 'value': f"{line['v']:.1f}" }
+            channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
+        if fullname == temperature_rgbmatrix_namefilter3:
+            print(f"[W] Sending temperature3 value for device {fullname} ({line['v']:.1f})")
+            message = { 'type': 'temperature3', 'value': f"{line['v']:.1f}" }
             channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
 
 def callback(ch, method, properties, body):
