@@ -19,7 +19,6 @@ mqrabbit_host = os.getenv("MQRABBIT_HOST")
 mqrabbit_vhost = os.getenv("MQRABBIT_VHOST")
 mqrabbit_port = os.getenv("MQRABBIT_PORT")
 mqrabbit_exchange = os.getenv("MQRABBIT_EXCHANGE")
-mqrabbit_rgbmatrix_destination = os.getenv("MQRABBIT_RGBMATRIX_DESTINATION")
 
 es_url = os.getenv("ES_URL")
 es_user = os.getenv("ES_USER")
@@ -54,8 +53,6 @@ def handleSenML(body):
             fullname = basename + line['n']        
             print(f"[W] Storing value with name {line['n']} for device {fullname} ({line['v']:.1f})")
             line['n'] = fullname
-            #message = { 'bn': fullname, 'v': line['v'] }
-            #channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
             print(f"[W] Storing: {line}")
             es.index(index='rfc8428', document=line)
 

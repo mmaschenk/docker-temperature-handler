@@ -1,6 +1,7 @@
 FROM python:3
 
-RUN pip install paho-mqtt pika elasticsearch==7.15.1 pytz tzlocal python-dateutil
+COPY requirements.txt /
+RUN pip install -r requirements.txt
 
 COPY temperature_input.py /
 COPY temperature_rgbmatrix.py /

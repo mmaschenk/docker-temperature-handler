@@ -1,3 +1,4 @@
 .vscode
 testenv.sh
 adhoc.ipynb
+.venv

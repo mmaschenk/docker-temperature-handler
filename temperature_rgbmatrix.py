@@ -3,7 +3,6 @@
 import pika
 import json
 import time
-import uuid
 import datetime
 import os
 
@@ -18,7 +17,7 @@ mqrabbit_host = os.getenv("MQRABBIT_HOST")
 mqrabbit_vhost = os.getenv("MQRABBIT_VHOST")
 mqrabbit_port = os.getenv("MQRABBIT_PORT")
 mqrabbit_exchange = os.getenv("MQRABBIT_EXCHANGE")
-mqrabbit_rgbmatrix_destination = os.getenv("MQRABBIT_RGBMATRIX_DESTINATION")
+mqrabbit_rgbexchange = os.getenv("MQRABBIT_RGBEXCHANGE")
 
 temperature_rgbmatrix_namefilter1 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER1")
 temperature_rgbmatrix_namefilter2 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER2")
@@ -41,15 +40,15 @@ def handleSenML(body):
         if fullname == temperature_rgbmatrix_namefilter1:
             print(f"[W] Sending temperature1 value for device {fullname} ({line['v']:.1f})")
             message = { 'type': 'temperature1', 'value': f"{line['v']:.1f}" }
-            channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
+            channel.basic_publish(exchange=mqrabbit_rgbexchange, routing_key='*', body=json.dumps(message))
         if fullname == temperature_rgbmatrix_namefilter2:
             print(f"[W] Sending temperature2 value for device {fullname} ({line['v']:.1f})")
             message = { 'type': 'temperature2', 'value': f"{line['v']:.1f}" }
-            channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
+            channel.basic_publish(exchange=mqrabbit_rgbexchange, routing_key='*', body=json.dumps(message))
         if fullname == temperature_rgbmatrix_namefilter3:
             print(f"[W] Sending temperature3 value for device {fullname} ({line['v']:.1f})")
             message = { 'type': 'temperature3', 'value': f"{line['v']:.1f}" }
-            channel.basic_publish(exchange='', routing_key=mqrabbit_rgbmatrix_destination, body=json.dumps(message))
+            channel.basic_publish(exchange=mqrabbit_rgbexchange, routing_key='*', body=json.dumps(message))
 
 def callback(ch, method, properties, body):
     print(f"[W] Handling: {body}")
@@ -68,7 +67,7 @@ mqparameters = pika.ConnectionParameters(
 mqconnection = pika.BlockingConnection(mqparameters)
 channel = mqconnection.channel()
 
-queuename = 'temperature_to_rgbmatrix_'+ str(uuid.uuid1())
+queuename = 'temperature_rgbmatrix_' + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 q = channel.queue_declare(queue=queuename, exclusive=True)
 channel.queue_bind(exchange=mqrabbit_exchange, queue=q.method.queue)
 
