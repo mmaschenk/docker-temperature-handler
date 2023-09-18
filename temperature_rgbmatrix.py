@@ -68,7 +68,7 @@ mqconnection = pika.BlockingConnection(mqparameters)
 channel = mqconnection.channel()
 
 queuename = 'temperature_rgbmatrix_' + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-q = channel.queue_declare(queue=queuename, exclusive=True)
+q = channel.queue_declare(queue=queuename, exclusive=True, auto_delete=True)
 channel.queue_bind(exchange=mqrabbit_exchange, queue=q.method.queue)
 
 channel.basic_consume(queue=queuename, on_message_callback=callback)

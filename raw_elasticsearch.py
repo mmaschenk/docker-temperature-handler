@@ -2,8 +2,6 @@
 
 import pika
 import json
-import time
-import uuid
 import datetime
 import os
 from elasticsearch import Elasticsearch
@@ -92,8 +90,8 @@ mqparameters = pika.ConnectionParameters(
 mqconnection = pika.BlockingConnection(mqparameters)
 channel = mqconnection.channel()
 
-queuename = 'temperature_to_elasticsearch_'+ str(uuid.uuid1())
-q = channel.queue_declare(queue=queuename, exclusive=True)
+queuename = 'temperature_to_elasticsearch_'+ + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+q = channel.queue_declare(queue=queuename, exclusive=True, auto_delete=True)
 channel.queue_bind(exchange=mqrabbit_exchange, queue=q.method.queue)
 
 channel.basic_consume(queue=queuename, on_message_callback=callback)
