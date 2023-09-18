@@ -1,34 +1,4 @@
 apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  labels:
-    app: temperature-handler
-  name: temperature-handler
-spec:
-  replicas: 1
-  serviceName: temperature-handler
-  selector:
-    matchLabels:
-      app: temperature-handler
-  template:
-    metadata:
-      labels:
-        app: temperature-handler
-    spec:
-      containers:
-      - name: temperature-handler
-        image: ghcr.io/mmaschenk/docker-temperature-handler:main
-        envFrom:
-        - secretRef:
-            name: passwords
-        - configMapRef:
-            name: environment
-        resources:
-          limits:
-            memory: "100Mi"
-            cpu: "50m"
----
-apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -48,7 +18,7 @@ spec:
     spec:
       containers:
       - name: temperature-rgbmatrix-runner
-        image: ghcr.io/mmaschenk/docker-temperature-handler:main
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.5.1
         envFrom:
         - secretRef:
             name: passwords
@@ -81,7 +51,7 @@ spec:
     spec:
       containers:
       - name: raw-elasticsearch-runner
-        image: ghcr.io/mmaschenk/docker-temperature-handler:main
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.5.1
         envFrom:
         - secretRef:
             name: passwords
@@ -113,7 +83,7 @@ spec:
     spec:
       containers:
       - name: rtl433-temperature-input
-        image: ghcr.io/mmaschenk/docker-temperature-handler:main
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.5.1
         envFrom:
         - secretRef:
             name: passwords
