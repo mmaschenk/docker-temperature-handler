@@ -90,7 +90,7 @@ mqparameters = pika.ConnectionParameters(
 mqconnection = pika.BlockingConnection(mqparameters)
 channel = mqconnection.channel()
 
-queuename = 'temperature_to_elasticsearch_' + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+queuename = 'temperature_elasticsearch_' + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 q = channel.queue_declare(queue=queuename, exclusive=True, auto_delete=True)
 channel.queue_bind(exchange=mqrabbit_exchange, queue=q.method.queue)
 

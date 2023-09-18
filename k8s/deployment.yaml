@@ -62,7 +62,7 @@ spec:
             memory: "100Mi"
             cpu: "50m"
         command: [ "python" ]
-        args: [ "-u", "/raw_elasticsearch.py"]
+        args: [ "-u", "/temperature_elasticsearch.py"]
 ---
 apiVersion: apps/v1
 kind: StatefulSet
