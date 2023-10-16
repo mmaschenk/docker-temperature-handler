@@ -8,4 +8,6 @@ COPY temperature_rgbmatrix.py /
 COPY temperature_elasticsearch.py /
 COPY temperature_input_rtl433.py /
 
+RUN mkdir /config
+
 CMD python -u /temperature_input.py

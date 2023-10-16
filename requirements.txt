@@ -4,3 +4,4 @@ elasticsearch==7.15.1
 pytz
 tzlocal
 python-dateutil
+pyyaml

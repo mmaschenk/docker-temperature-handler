@@ -4,7 +4,8 @@ import functools
 import pika
 import json
 import paho.mqtt.client as mqtt
-import pytz
+import yaml
+from yaml.loader import SafeLoader
 from dateutil import parser
 import datetime
 import os
@@ -29,18 +30,14 @@ mqtt_user = os.getenv("MQTT_USER")
 mqtt_password = os.getenv("MQTT_PASSWORD")
 mqtt_queue = os.getenv("MQTT_RTL433_EVENT_QUEUE")
 
+mappingfile = os.getenv("MAPPINGFILE")
+
 everythingfine = True
 
-print("[R] Connecting")
-mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
-mqparameters = pika.ConnectionParameters(
-    host=mqrabbit_host,
-    virtual_host=mqrabbit_vhost,
-    port=mqrabbit_port,
-    credentials=mqrabbit_credentials)
+mqconnection = None
+channel = None
 
-mqconnection = pika.BlockingConnection(mqparameters)
-channel = mqconnection.channel()
+mapping = {}
 
 def handleRTL433(message):
     """
@@ -53,9 +50,9 @@ def handleRTL433(message):
     print(f"Found timevalue = [{timevalue}]")
 
     model = message.get('model','unknownmodel')
-    id = message.get('id', 'unknownid')
+    payload_id = message.get('id', 'unknownid')
     channelid = message.get('channel','unknownchannel')
-    basename = f"{model}:{id}:{channelid}:"
+    basename = f"{model}:{payload_id}:{channelid}:"
     print(f"Basename = [{basename}]")
 
     message.pop('time', None)
@@ -65,6 +62,7 @@ def handleRTL433(message):
 
     baseline = { "bn": basename, "bt": timevalue }
     rfc8428 = [ ]
+    extrarecords = []
 
     for k in message.keys():
         print(f"Doing [{k}] -> [{message[k]}]")
@@ -81,6 +79,17 @@ def handleRTL433(message):
             else:
                 record['vs'] = message[k]
 
+        try:
+            mapvalue = mapping[model][payload_id][channelid][record['n']]
+            print(f"Found mapping: {mapvalue}")
+            extrarecord = { **record }
+            extrarecord['bn'] = mapvalue + ':'
+            extrarecord['bt'] = timevalue
+            extrarecords.append(extrarecord)
+        except:
+            pass
+            #print(f"Found no mapping for [{model}][{payload_id}][{channelid}] in {mapping}")
+
         rfc8428.append( record )
         baseline = {}
 
@@ -91,7 +100,16 @@ def handleRTL433(message):
             channel.basic_publish,
                 exchange=mqrabbit_exchange, routing_key='*', 
                 body=json.dumps(rfc8428))
+    )
+    if extrarecords:
+        print(f"Outputting extra records: {extrarecords}")
+        mqconnection.add_callback_threadsafe(
+            functools.partial( 
+                channel.basic_publish,
+                exchange=mqrabbit_exchange, routing_key='*', 
+                body=json.dumps(extrarecords))
         )
+
 
 def on_message(client, userdata, message):
     global everythingfine
@@ -135,27 +153,50 @@ def on_disconnect(client, userdata, rc=0):
     client.loop_stop()
     everythingfine = False
 
-channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
 
-everythingfine = True
+def main():
+    global mapping
+    with open(mappingfile) as f:
+        mapping = yaml.load(f, Loader=SafeLoader)
+    print(mapping)
 
-client = mqtt.Client('temperature rtl433 filter')
-client.on_message=on_message
-client.on_connect=on_connect
-client.username_pw_set(mqtt_user, mqtt_password)
-client.connect(mqtt_host, port=int(mqtt_port))
+    global mqconnection
+    global channel
 
-client.loop_start()
-print(f"[R] Subscribing to {mqtt_queue}")
-client.subscribe(mqtt_queue)
-print("[R] Subscribed")
-while True:
-    mqconnection.sleep(60)
-    if not everythingfine:
-        print("[R] Re-initializing")
-        break
-    else:
-        print("[R] everything is fine")
+    print("[R] Connecting")
+    mqrabbit_credentials = pika.PlainCredentials(mqrabbit_user, mqrabbit_password)
+    mqparameters = pika.ConnectionParameters(
+    host=mqrabbit_host,
+    virtual_host=mqrabbit_vhost,
+    port=mqrabbit_port,
+    credentials=mqrabbit_credentials)
 
-print("[R] Ending main loop")
-client.loop_stop()
+    mqconnection = pika.BlockingConnection(mqparameters)
+    channel = mqconnection.channel()
+    channel.exchange_declare(exchange=mqrabbit_exchange, exchange_type='fanout', durable=True)
+
+    everythingfine = True
+
+    client = mqtt.Client('temperature rtl433 filter2')
+    client.on_message=on_message
+    client.on_connect=on_connect
+    client.username_pw_set(mqtt_user, mqtt_password)
+    client.connect(mqtt_host, port=int(mqtt_port))
+
+    client.loop_start()
+    print(f"[R] Subscribing to {mqtt_queue}")
+    client.subscribe(mqtt_queue)
+    print("[R] Subscribed")
+    while True:
+        mqconnection.sleep(60)
+        if not everythingfine:
+            print("[R] Re-initializing")
+            break
+        else:
+            print("[R] everything is fine")
+
+    print("[R] Ending main loop")
+    client.loop_stop()
+
+if __name__ == "__main__":
+    main()
