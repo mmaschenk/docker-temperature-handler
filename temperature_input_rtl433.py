@@ -39,6 +39,19 @@ channel = None
 
 mapping = {}
 
+def mapfunction( mapping, top, *args):
+    if args:
+        f = args[0]
+        try:
+            return mapfunction( mapping[top], f, *args[1:])
+        except KeyError as ke:
+            try:
+                return mapfunction( mapping['*'], f, *args[1:])
+            except KeyError as ke2:
+                raise ke from None
+    else:
+        return mapping[top]
+
 def handleRTL433(message):
     """
     Create a RFC8428-compliant message and forward this to next queue. 
@@ -80,7 +93,7 @@ def handleRTL433(message):
                 record['vs'] = message[k]
 
         try:
-            mapvalue = mapping[model][payload_id][channelid][record['n']]
+            mapvalue = mapfunction( mapping, model, payload_id, channelid, record['n'] )
             print(f"Found mapping: {mapvalue}")
             extrarecord = { **record }
             extrarecord['bn'] = mapvalue + ':'
