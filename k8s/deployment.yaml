@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: temperature-rgbmatrix-runner
-        image: ghcr.io/mmaschenk/docker-temperature-handler:1.5.1
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.8
         envFrom:
         - secretRef:
             name: passwords
@@ -35,23 +35,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: raw-elasticsearch-runner
-  name: raw-elasticsearch-runner
+    app: temperature-elasticsearch-runner
+  name: temperature-elasticsearch-runner
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: raw-elasticsearch-runner
+      app: temperature-elasticsearch-runner
   template:
     metadata:
       labels:
-        app: raw-elasticsearch-runner
+        app: temperature-elasticsearch-runner
     spec:
       containers:
-      - name: raw-elasticsearch-runner
-        image: ghcr.io/mmaschenk/docker-temperature-handler:1.5.1
+      - name: temperature-elasticsearch-runner
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.8
         envFrom:
         - secretRef:
             name: passwords
@@ -83,7 +83,7 @@ spec:
     spec:
       containers:
       - name: rtl433-temperature-input
-        image: ghcr.io/mmaschenk/docker-temperature-handler:1.5.1
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.8
         envFrom:
         - secretRef:
             name: passwords
@@ -95,3 +95,10 @@ spec:
             cpu: "50m"
         command: [ "python" ]
         args: [ "-u", "/temperature_input_rtl433.py"]
+        volumeMounts:
+        - mountPath: /config
+          name: mappingyaml
+      volumes:
+      - name: mappingyaml
+        configMap:
+          name: temperature-input-mapping
