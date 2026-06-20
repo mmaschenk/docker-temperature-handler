@@ -6,6 +6,7 @@ import time
 import datetime
 import os
 import paho.mqtt.client as mqtt
+from paho.mqtt.client import CallbackAPIVersion
 
 """
 This script reads a RFC8428-compliant message from the MQRABBIT queue 
@@ -62,7 +63,7 @@ def callback(ch, method, properties, body):
     ch.basic_ack(delivery_tag = method.delivery_tag)
 
 print("[R] Connecting to mqtt")
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(callback_api_version=CallbackAPIVersion.VERSION2)
 mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
 mqtt_client.connect(mqtt_host, int(mqtt_port))
 
