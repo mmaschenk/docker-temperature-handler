@@ -50,7 +50,7 @@ def handleSenML(body):
             fullname = basename + line['n']
 
         if fullname in temperature_topic_dictionary:
-            mqtt_topic = temperature_topic_dictionary[fullname]['topic']
+            mqtt_topic = temperature_topic_dictionary[fullname]['state_topic']
             mqtt_message = f"{line['v']:.1f}"
             print(f"[W] Sending message {mqtt_message} to topic {mqtt_topic} for device {fullname} ({line['v']:.1f})")
             mqtt_client.publish(mqtt_topic, mqtt_message, retain=True)
@@ -74,13 +74,12 @@ for sensor, sensordata in temperature_topic_dictionary.items():
     print(f"[I] Registering sensor {sensor} with {sensordata}")
 
     payload = {
-        "name": sensordata['name'],
-        "unique_id": f"{node_id}_{sensordata['id']}",
-        "state_topic": sensordata['topic'],
         **static_payload,
+        **sensordata,
+        "unique_id": f"{node_id}_{sensordata['id']}",
         "device": {
-            "identifiers": [node_id],
-            **device
+            **device,
+            "identifiers": [node_id]
         }
     }
     discovery_topic = f"homeassistant/sensor/{node_id}/{sensordata['id']}/config"
