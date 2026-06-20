@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: temperature-rgbmatrix-runner
-        image: ghcr.io/mmaschenk/docker-temperature-handler:1.8
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.12
         envFrom:
         - secretRef:
             name: passwords
@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
       - name: temperature-elasticsearch-runner
-        image: ghcr.io/mmaschenk/docker-temperature-handler:1.8
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.12
         envFrom:
         - secretRef:
             name: passwords
@@ -63,6 +63,39 @@ spec:
             cpu: "50m"
         command: [ "python" ]
         args: [ "-u", "/temperature_elasticsearch.py"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: homeassistant-mqtt-bridge
+  name: homeassistant-mqtt-bridge
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: homeassistant-mqtt-bridge
+  template:
+    metadata:
+      labels:
+        app: homeassistant-mqtt-bridge
+    spec:
+      containers:
+      - name: homeassistant-mqtt-bridge
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.12
+        envFrom:
+        - secretRef:
+            name: passwords
+        - configMapRef:
+            name: environment
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        command: [ "python" ]
+        args: [ "-u", "/temperature_mqtt.py"]
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -83,7 +116,7 @@ spec:
     spec:
       containers:
       - name: rtl433-temperature-input
-        image: ghcr.io/mmaschenk/docker-temperature-handler:1.8
+        image: ghcr.io/mmaschenk/docker-temperature-handler:1.12
         envFrom:
         - secretRef:
             name: passwords
