@@ -26,6 +26,7 @@ mqtt_user = os.getenv("HOME_ASSISTANT_MQTT_USER")
 mqtt_password = os.getenv("HOME_ASSISTANT_MQTT_PASSWORD")
 node_id = os.getenv("HOME_ASSISTANT_NODE_ID")
 device = json.loads(os.getenv("HOME_ASSISTANT_DEVICE_PAYLOAD"))
+static_payload = json.loads(os.getenv("HOME_ASSISTANT_STATIC_PAYLOAD"))
 
 temperature_rgbmatrix_namefilter1 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER1")
 temperature_rgbmatrix_namefilter2 = os.getenv("TEMPERATURE_RGBMATRIX_NAMEFILTER2")
@@ -75,7 +76,7 @@ for sensor, sensordata in temperature_topic_dictionary.items():
         "name": sensordata['name'],
         "unique_id": f"{node_id}_{sensordata['id']}",
         "state_topic": sensordata['topic'],
-        "unit_of_measurement": "°C",
+        **static_payload,
         "device": {
             "identifiers": [node_id],
             **device
