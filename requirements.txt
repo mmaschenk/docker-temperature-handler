@@ -1,4 +1,4 @@
-paho-mqtt
+paho-mqtt~=2.0
 pika
 elasticsearch==7.15.1
 pytz

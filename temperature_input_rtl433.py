@@ -4,6 +4,7 @@ import functools
 import pika
 import json
 import paho.mqtt.client as mqtt
+from paho.mqtt.client import CallbackAPIVersion
 import yaml
 from yaml.loader import SafeLoader
 from dateutil import parser
@@ -155,11 +156,11 @@ def on_message(client, userdata, message):
     except Exception as e:
         print(f"[W] Maybe not fine: {e}")
 
-def on_connect(client, userdata, flags, rc):
-    if rc==0:
-        print(f"[R] connected OK Returned code=[{rc}], flags=[{flags}]")
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code==0:
+        print(f"[R] connected OK Returned code=[{reason_code}], flags=[{flags}]")
     else:
-        print("[R] Bad connection Returned code=",rc)
+        print("[R] Bad connection Returned code=",reason_code   )
 
 def on_disconnect(client, userdata, rc=0):
     global everythingfine
@@ -190,7 +191,7 @@ def main():
 
     everythingfine = True
 
-    client = mqtt.Client('temperature rtl433 filter2')
+    client = mqtt.Client(client_id='temperature rtl433 filter2', callback_api_version=CallbackAPIVersion.VERSION2)
     client.on_message=on_message
     client.on_connect=on_connect
     client.username_pw_set(mqtt_user, mqtt_password)
