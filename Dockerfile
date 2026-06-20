@@ -7,6 +7,7 @@ COPY temperature_input.py /
 COPY temperature_rgbmatrix.py /
 COPY temperature_elasticsearch.py /
 COPY temperature_input_rtl433.py /
+COPY temperature_mqtt.py /
 
 RUN mkdir /config
 
